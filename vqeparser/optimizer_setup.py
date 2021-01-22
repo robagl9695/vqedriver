@@ -17,7 +17,7 @@ def _optim(blocks):
     if len(optimizer_block) == 0:
         optimizer = aqoptim.CG(maxiter=100,          
                                disp=False,
-                               gtol=10**(-8),
+                               gtol=10**(-6),
                                tol=None,
                                eps=1.4901161193847656e-08)
         optimizer_name = 'Conjugate Gradient'

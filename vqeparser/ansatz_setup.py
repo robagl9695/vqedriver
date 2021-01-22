@@ -9,9 +9,8 @@ Created on Wed Jan 20 13:34:33 2021
 import qiskit.chemistry.components.variational_forms as varforms
 import sys
 from qiskit.chemistry.components.initial_states import HartreeFock
-from qiskit.circuit.library import TwoLocal
 
-ansatz_avail = ['twolocal']
+ansatz_avail = ['uccsd']
 
 def _initial_state_set(num_spinorb,
                        num_part,
@@ -36,15 +35,17 @@ def _ansatz(blocks,
     
     initial_state = _initial_state_set(num_spinorb, num_part, qubitop_map, qubitop_z2red)
     
-    if qubitop_map != 'parity':
-        num_qubits += 2
+    #if qubitop_map != 'parity':
+    #    num_qubits += 2
     
     if len(ansatz_block) == 0:
-        ansatz = TwoLocal(num_qubits=num_qubits,
-                          rotation_blocks=['ry', 'rz'], 
-                          entanglement_blocks='cz', 
-                          initial_state=initial_state)
-        ansatz_name = 'Two Local Circuit'
+        ansatz = varforms.UCCSD(num_orbitals=num_spinorb,
+                                num_particles=num_part, 
+                                initial_state=initial_state,
+                                qubit_mapping=qubitop_map,
+                                two_qubit_reduction=qubitop_z2red
+                                )
+        ansatz_name = 'UCCSD'
     else:
         ansatz_block = ansatz_block[0]
         ansatz_opts = ansatz_block.split(' ')
