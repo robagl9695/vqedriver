@@ -1,0 +1,234 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Jan 17 17:56:56 2021
+
+@author: rgonzalez
+"""
+
+from vqeparser import main_parser
+from vqeparser import geom_parser
+from vqeparser import basis_parser
+from vqeparser import scf_parser
+from vqeparser import qubitop_parser
+from vqeparser import optimizer_setup
+from vqeparser import ansatz_setup
+import sys
+import time
+
+print('''
+         ============================================================
+         =                                                          =
+         =                        VQEDriver                         =
+         =                         v0.0.0                           =
+         =                                                          =
+         ============================================================
+      
+         --- Python3 driver for the VQE algorithm on IBM's Qiskit ---
+               
+         Developed by:
+              Quantum Information Group
+              School of Chemistry
+              Universidad de Costa Rica
+              San Jose, Costa Rica
+      
+      '''
+      )
+
+inputfile = 'h2.inp' #sys.argv[1]
+
+print('=============================================================================')
+print('Reading input file from file: ' + inputfile)
+print('=============================================================================')
+print('\n')
+
+#parsing the input to get the keyword blocks
+blocks, filename = main_parser._parser(inputfile)
+
+from pandas import DataFrame
+
+def print_opts_block(opts_list):
+    l1, l2 = len(opts_list), len(opts_list[0])
+    opts_list = DataFrame(opts_list, index=['']*l1, columns=['']*l2)
+    print(opts_list)
+
+#obtain the molecule characteristics
+
+coords, charge, spin, units = geom_parser._geom(blocks)
+basis, basisset, basisdim = basis_parser._basis(blocks, coords)
+scfmethod, scfconv, scfiter, scfcore = scf_parser._scf(blocks, spin)
+
+#SCF calculation
+
+print('       *********************        ')
+print('       *  SCF CALCULATION  *        ')
+print('       *********************        ')
+print('')
+print('---------------------')
+print('Cartesian Coordinates')
+print('---------------------')
+
+xyzcoords = coords.split(';')
+
+for i in range(len(xyzcoords)):
+    xyzcoords[i] = xyzcoords[i].split()
+
+print_opts_block(xyzcoords)
+
+#print basis set info
+
+print('')
+print('---------------------')
+print('Basis Set Information')
+print('---------------------')
+print('')
+
+for key in basis:
+    print(key + ': ' + basisset)
+    
+print('')
+print('TOTAL BASIS FUNCTIONS:  ' + str(basisdim))
+
+#define the Qmolecule for the Qiskit run
+
+from qiskit.chemistry.drivers import PySCFDriver
+
+scfstart = time.time_ns()
+
+driver = PySCFDriver(atom=coords,
+	 unit=units,
+	 charge=charge,
+	 spin=spin,
+	 basis=basis,
+	 hf_method=scfmethod,
+	 conv_tol=10**(-scfconv),
+	 max_cycle=scfiter,
+     max_memory=scfcore)
+
+molecule = driver.run()
+
+h1 = molecule.one_body_integrals
+h2 = molecule.two_body_integrals
+
+scfend = time.time_ns()
+scftime = (scfend-scfstart)/10**9
+
+#print the SCF run settings
+
+print('')
+print('------------------------')
+print('SCF Calculation Settings')
+print('------------------------')
+print('')
+print('Molecule Settings:')
+
+num_elec = molecule.num_alpha + molecule.num_beta
+
+scfmolsettings = [['Hartree-Fock type: ', scfmethod.name], 
+                  ['Total Charge: ', charge],
+                  ['Multiplicity: ', spin+1],
+                  ['Number of Electrons: ', num_elec], 
+                  ['Alpha Electrons: ', molecule.num_alpha],
+                  ['Beta Electrons: ', molecule.num_beta],
+                  ['Nuclear Repulsion: ', '{:.6f} Eh'.format(molecule.nuclear_repulsion_energy)]]
+
+print_opts_block(scfmolsettings)
+
+print('')
+print('Procedure Settings:')
+
+scfprocsettings = [['Maximum iterations: ', scfiter], 
+                   ['Convergence: ', '{:.3e} Eh'.format(10**(-scfconv))],
+                   ['Maximum memory: ', '{:d} MB'.format(scfcore)],
+                   ['Total Time elapsed: ', '{:.3f} s'.format(scftime)]]
+
+print_opts_block(scfprocsettings)
+
+#VQE Calculation
+print('')
+print('       *********************        ')
+print('       *  VQE CALCULATION  *        ')
+print('       *********************        ')
+print('')
+print('---------------------')
+print('Qubit Operator Setup ')
+print('---------------------')
+
+#parse vqe settings
+
+qubitop_map, qubitop_threshold, qubitop_z2red = qubitop_parser._qubitop(blocks)
+optimizer, optimizer_name = optimizer_setup._optim(blocks)
+
+#building the fermionic and qubit operators
+
+from qiskit.chemistry import FermionicOperator
+
+qubitop_start = time.time_ns()
+
+FermOp = FermionicOperator(h1=h1, h2=h2)
+QubitOp = FermOp.mapping(map_type=qubitop_map, 
+                         threshold=10**(-qubitop_threshold))
+
+if qubitop_z2red:
+    from qiskit.aqua.operators import Z2Symmetries
+    pauli_symm = Z2Symmetries.find_Z2_symmetries(QubitOp)
+    QubitOp = Z2Symmetries.two_qubit_reduction(operator=QubitOp, 
+                                               num_particles=[molecule.num_alpha,
+                                                              molecule.num_beta])    
+
+qubitop_end = time.time_ns()
+qubitop_time = (qubitop_end-qubitop_start)/10**9
+
+qubitop_dict = {'jordan_wigner': 'Jordan-Wigner', 
+               'parity': 'Parity', 
+               'bravyi_kitaev': 'Bravyi-Kitaev', 
+               'bksf': 'Bravyi-Kitaev Super Fast'}
+
+qubitop = [['Fermionic to Qubit Mapping: ', qubitop_dict[qubitop_map]], 
+           ['Pauli Chop Threshold: ', '{:.3e}'.format(10**(-qubitop_threshold))],
+           ['Number of Qubits: ', QubitOp.num_qubits],
+           ['Z2 Symmetries Reduction: ', str(qubitop_z2red)],
+           ['Size (Number of Pauli Operators): ', len(QubitOp.paulis)],
+           ['Total Time elapsed: ', '{:.3f} s'.format(qubitop_time)]]
+
+print_opts_block(qubitop)
+QubitOp.to_file(filename + '.qubitop.txt')
+
+print('')
+
+if qubitop_z2red:
+    print(pauli_symm)
+
+print('')
+print('-----------------')
+print('VQE Run Settings ')
+print('-----------------')
+
+#set up the ansatz
+
+num_part = [molecule.num_alpha, molecule.num_beta]
+num_spinorb = 2*molecule.num_orbitals
+num_qubits = QubitOp.num_qubits
+
+vqestart = time.time_ns()
+
+ansatz, ansatz_name = ansatz_setup._ansatz(blocks,
+                                           num_spinorb,
+                                           num_part,
+                                           qubitop_map,
+                                           qubitop_z2red,
+                                           num_qubits)
+
+from qiskit.aqua.algorithms import VQE
+
+VQEalgorithm = VQE(operator=QubitOp,
+                   var_form=ansatz,
+                   optimizer=optimizer)
+
+vqeend = time.time_ns()
+
+vqetime = (vqeend-vqestart)/10**9
+
+vqeopt = [['Optimizer: ', optimizer_name]]
+
+print_opts_block(vqeopt)
