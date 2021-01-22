@@ -1,0 +1,50 @@
+BASIS SET:
+----------
+
+- Add counting of basisdim = sum_(atoms) num_atom * basis_funcs
+- Add read of ECPs
+
+SCF CALCULATION:
+---------------
+
+- How to get orbital energy from QMolecule Object?
+- Automatize freeze list
+   --- Core orbitals
+- Automatize remove list
+   --- Highest orbitals
+- Automatize FermionOp remove and freeze
+   --- Add shift to the nuclear repulsion!!!
+   --- Remove freeze and core orbitals from 
+- Implement KS SCF (?)
+   --- Is it applicable? 
+   --- Is it necessary?
+   --- THIS REQUIRES REDEFINITION OF PySCFDriver!!!: it only takes HFMethodType
+
+OPTIMIZER:
+----------
+
+- Add rest of optimizers available in qiskit.aqua.components.optimizers: 
+-- Local: ADAM, AQGD, COBYLA, L-BFGS-B, GSLS, Nelder-Mead, NFT, P-BFGS, Powell, SLSQP, SPSA, TNC
+-- Local scikit: BOBYQA, IMFIL, SNOBFIT
+-- Global: install NLopt first!!
+
+SIMULATION:
+-----------
+
+- Backends def: https://medium.com/qiskit/qiskit-backends-what-they-are-and-how-to-work-with-them-fb66b3bd0463
+- 
+
+DOCUMENTATION:
+--------------
+
+- Complete list of available basis sets
+- Write down optimizers: local (local that require pip install scikit-quant)
+-- Global Optimizers: installing NLopt required.
+
+MAIN DRIVER:
+------------
+
+- Change every block part to function calls (?)
+   --- Useful to later add on a geom_opt module. See: https://qiskit.org/textbook/ch-applications/vqe-molecules.html#implementation
+
+
