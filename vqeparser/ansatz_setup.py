@@ -59,10 +59,10 @@ def _ansatz(blocks,
                 sys.exit(1)
             else:
                 if ansatz_method == 'twolocal':
-                    ansatz = TwoLocal(num_qubits=num_qubits,
-                          rotation_blocks=['ry', 'rz'], 
-                          entanglement_blocks='cz', 
-                          initial_state=initial_state)
+#                    ansatz = TwoLocal(num_qubits=num_qubits,
+#                          rotation_blocks=['ry', 'rz'], 
+#                          entanglement_blocks='cz', 
+#                          initial_state=initial_state)
                     ansatz_name = 'Two Local Circuit'
                         
     return ansatz, ansatz_name

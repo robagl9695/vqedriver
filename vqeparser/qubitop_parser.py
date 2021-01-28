@@ -12,29 +12,29 @@ def _qubitop(blocks):
     qubitop_block = [block for block in blocks if block.startswith('%qubitop')]
     
     if len(qubitop_block) == 0:
-        qubitop_map = 'jordan_wigner'
+        qubitop_map = 'parity'
         qubitop_threshold = 8
         qubitop_z2red = False
     else:
         qubitop_block = qubitop_block[0]
         qubitop_opts = qubitop_block.split(' ')
         
-        qubitop_map = [opt for opt in qubitop_opts if opt.startswith('mapping')]
+        qubitop_map = [opt for opt in qubitop_opts if opt.startswith('map')]
         
-        map_avail = ['jordan_wigner', 'parity', 'bravyi_kitaev', 'bksf']
+        map_avail = ['jordan_wigner', 'parity', 'bravyi_kitaev']
         
         if len(qubitop_map) != 0:
             qubitop_map = qubitop_map[0].split('=')[1].strip('\n')
             if qubitop_map not in map_avail:
                 print('MappingError: Invalid fermionic operator mapping selected')
                 sys.exit(1)
-        else:
-            qubitop_map = 'jordan_wigner'
+            else:
+                qubitop_map = qubitop_map
             
-        qubitop_threshold = [opt for opt in qubitop_opts if opt.startswith('threshhold')]
+        qubitop_threshold = [opt for opt in qubitop_opts if opt.startswith('threshold')]
             
         if len(qubitop_threshold) != 0:
-            qubitop_threshold = int(qubitop_map[0].split('=')[1].strip('\n'))
+            qubitop_threshold = int(qubitop_threshold[0].split('=')[1].strip('\n'))
         else:
             qubitop_threshold = 8
             

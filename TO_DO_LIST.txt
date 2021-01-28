@@ -1,13 +1,26 @@
+************************
+* INMEDIATE PRIORITIES *
+************************
+
+- Add QASM Functionality
+
+- Add noisy model functionality
+
+- VQE number of expectation value measurements
+
 BASIS SET:
 ----------
 
-- Add counting of basisdim = sum_(atoms) num_atom * basis_funcs
+- Add checkpoint for availability of basis set
 - Add read of ECPs
 
 SCF CALCULATION:
 ---------------
 
-- How to get orbital energy from QMolecule Object?
+****************************************************
+* How to get orbital energy from QMolecule Object? *
+****************************************************
+
 - Automatize freeze list
    --- Core orbitals
 - Automatize remove list
@@ -28,11 +41,21 @@ OPTIMIZER:
 -- Local scikit: BOBYQA, IMFIL, SNOBFIT
 -- Global: install NLopt first!!
 
+ANSATZE:
+--------
+
+- Check why Z2 reduction only works for parity mapping in the InitialStates and the VarForm?
+--- Does the mapping have to be consistent between all? Meanwhile, offer Z2 sym only for parity
+- Implement other ansatze: CHC, UCC from aqua.var_forms
+
 SIMULATION:
 -----------
 
+- Add %sim block: backend, test (true or false, calculates the exact energies using NumPyEigensolver), noise model, provider(?)
 - Backends def: https://medium.com/qiskit/qiskit-backends-what-they-are-and-how-to-work-with-them-fb66b3bd0463
-- 
+- Add backend selection: 
+-- Simulators: QASM, Statevector, Unitary
+-- IBMQ: noisy simulators. Check https://qiskit.org/textbook/ch-applications/vqe-molecules.html#implementation
 
 DOCUMENTATION:
 --------------

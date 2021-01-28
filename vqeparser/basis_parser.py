@@ -8,6 +8,7 @@ Created on Sat Jan 16 22:46:10 2021
 from pyscf.gto.basis import parse
 import os
 import sys
+from collections import Counter
 
 prefix = os.getcwd()
 
@@ -86,7 +87,9 @@ def get_atoms(coords):
         atom = coords[i].split()[0]
         atoms.append(atom)
         
-    atoms = unique(atoms)
+    #atoms = unique(atoms)
+    
+    atoms = Counter(atoms)
     
     return atoms
 
@@ -178,6 +181,7 @@ def read_basisset(basisset, coords):
         basis[atom] = parse(basisblocks[index])
         
     basisdim = 0
+    basistotal = 0
     
     for atom in atoms:
         index = atoms_avail.index(atom)
@@ -187,10 +191,13 @@ def read_basisset(basisset, coords):
         for i in reversed(range(0, len(atom_block), 1)):
             if atom_block[i].startswith(atom):
                 atom_block.pop(i)
+                
+        numatoms = atoms[atom]
         
         basisdim += len(atom_block)
+        basistotal += len(atom_block)*numatoms
     
-    return basis, basisdim
+    return basis, basisdim, basistotal
     
     
 def _basis(blocks, coords):
@@ -210,6 +217,6 @@ def _basis(blocks, coords):
     basis_all = [opt for opt in basis_opts if opt.startswith('all')][0]
     basisset = basis_all.split('=')[1]
     
-    basis, basisdim = read_basisset(basisset, coords)
+    basis, basisdim, basistotal = read_basisset(basisset, coords)
     
-    return basis, basisset, basisdim
+    return basis, basisset, basisdim, basistotal

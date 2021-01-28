@@ -6,6 +6,7 @@ Created on Sun Jan 17 17:56:56 2021
 @author: rgonzalez
 """
 
+from qiskit.aqua.algorithms import NumPyEigensolver
 from vqeparser import main_parser
 from vqeparser import geom_parser
 from vqeparser import basis_parser
@@ -13,6 +14,8 @@ from vqeparser import scf_parser
 from vqeparser import qubitop_parser
 from vqeparser import optimizer_setup
 from vqeparser import ansatz_setup
+from vqeparser import printing
+from numpy import real
 import sys
 import time
 
@@ -35,7 +38,7 @@ print('''
       '''
       )
 
-inputfile = 'h2.inp' #sys.argv[1]
+inputfile = 'small_molecule.inp' #sys.argv[1]
 
 print('=============================================================================')
 print('Reading input file from file: ' + inputfile)
@@ -45,17 +48,10 @@ print('\n')
 #parsing the input to get the keyword blocks
 blocks, filename = main_parser._parser(inputfile)
 
-from pandas import DataFrame
-
-def print_opts_block(opts_list):
-    l1, l2 = len(opts_list), len(opts_list[0])
-    opts_list = DataFrame(opts_list, index=['']*l1, columns=['']*l2)
-    print(opts_list)
-
 #obtain the molecule characteristics
 
 coords, charge, spin, units = geom_parser._geom(blocks)
-basis, basisset, basisdim = basis_parser._basis(blocks, coords)
+basis, basisset, basisdim, basistotal = basis_parser._basis(blocks, coords)
 scfmethod, scfconv, scfiter, scfcore = scf_parser._scf(blocks, spin)
 
 #SCF calculation
@@ -73,7 +69,7 @@ xyzcoords = coords.split(';')
 for i in range(len(xyzcoords)):
     xyzcoords[i] = xyzcoords[i].split()
 
-print_opts_block(xyzcoords)
+printing.print_opts_block(xyzcoords)
 
 #print basis set info
 
@@ -86,8 +82,10 @@ print('')
 for key in basis:
     print(key + ': ' + basisset)
     
-print('')
-print('TOTAL BASIS FUNCTIONS:  ' + str(basisdim))
+basis_opts = [['Unique basis functions: ', basisdim],
+              ['TOTAL BASIS FUNCTIONS: ', basistotal]]
+
+printing.print_opts_block(basis_opts)
 
 #define the Qmolecule for the Qiskit run
 
@@ -123,6 +121,7 @@ print('')
 print('Molecule Settings:')
 
 num_elec = molecule.num_alpha + molecule.num_beta
+shift = molecule.nuclear_repulsion_energy
 
 scfmolsettings = [['Hartree-Fock type: ', scfmethod.name], 
                   ['Total Charge: ', charge],
@@ -132,7 +131,7 @@ scfmolsettings = [['Hartree-Fock type: ', scfmethod.name],
                   ['Beta Electrons: ', molecule.num_beta],
                   ['Nuclear Repulsion: ', '{:.6f} Eh'.format(molecule.nuclear_repulsion_energy)]]
 
-print_opts_block(scfmolsettings)
+printing.print_opts_block(scfmolsettings)
 
 print('')
 print('Procedure Settings:')
@@ -140,9 +139,15 @@ print('Procedure Settings:')
 scfprocsettings = [['Maximum iterations: ', scfiter], 
                    ['Convergence: ', '{:.3e} Eh'.format(10**(-scfconv))],
                    ['Maximum memory: ', '{:d} MB'.format(scfcore)],
-                   ['Total Time elapsed: ', '{:.3f} s'.format(scftime)]]
+                   ['One-body Integrals: ', h1.size],
+                   ['Two-body Integrals: ', h2.size],
+                   ['SCF Elapsed Time: ', '{:.3f} s'.format(scftime)]]
 
-print_opts_block(scfprocsettings)
+printing.print_opts_block(scfprocsettings)
+
+if h1.size > 1600:
+    print('Insufficient Memory for test')
+    sys.exit(1)
 
 #VQE Calculation
 print('')
@@ -174,7 +179,9 @@ if qubitop_z2red:
     pauli_symm = Z2Symmetries.find_Z2_symmetries(QubitOp)
     QubitOp = Z2Symmetries.two_qubit_reduction(operator=QubitOp, 
                                                num_particles=[molecule.num_alpha,
-                                                              molecule.num_beta])    
+                                                              molecule.num_beta])
+
+    
 
 qubitop_end = time.time_ns()
 qubitop_time = (qubitop_end-qubitop_start)/10**9
@@ -182,24 +189,32 @@ qubitop_time = (qubitop_end-qubitop_start)/10**9
 qubitop_dict = {'jordan_wigner': 'Jordan-Wigner', 
                'parity': 'Parity', 
                'bravyi_kitaev': 'Bravyi-Kitaev', 
-               'bksf': 'Bravyi-Kitaev Super Fast'}
+               'bksf': 'Bravyi-Kitaev Superfast'}
 
 qubitop = [['Fermionic to Qubit Mapping: ', qubitop_dict[qubitop_map]], 
            ['Pauli Chop Threshold: ', '{:.3e}'.format(10**(-qubitop_threshold))],
            ['Number of Qubits: ', QubitOp.num_qubits],
            ['Z2 Symmetries Reduction: ', str(qubitop_z2red)],
            ['Size (Number of Pauli Operators): ', len(QubitOp.paulis)],
-           ['Total Time elapsed: ', '{:.3f} s'.format(qubitop_time)]]
+           ['Qubit Mapping Elapsed Time: ', '{:.3f} s'.format(qubitop_time)]]
 
-print_opts_block(qubitop)
-QubitOp.to_file(filename + '.qubitop.txt')
+printing.print_opts_block(qubitop)
+QubitOp.to_file(filename + '.qubit_operator.txt')
+
+if QubitOp.num_qubits > 12:
+    print('Insufficient Memory for test')
+    sys.exit(1)
 
 print('')
+print('Hamiltonian in Pauli Representation: ')
+print('')
+print(QubitOp.print_details())
 
 if qubitop_z2red:
+    print('')
     print(pauli_symm)
+    print('')
 
-print('')
 print('-----------------')
 print('VQE Run Settings ')
 print('-----------------')
@@ -221,14 +236,52 @@ ansatz, ansatz_name = ansatz_setup._ansatz(blocks,
 
 from qiskit.aqua.algorithms import VQE
 
-VQEalgorithm = VQE(operator=QubitOp,
-                   var_form=ansatz,
-                   optimizer=optimizer)
+vqe = VQE(operator=QubitOp,
+          var_form=ansatz,
+          optimizer=optimizer)
+
+from qiskit import BasicAer
+
+backend = BasicAer.get_backend('statevector_simulator')
 
 vqeend = time.time_ns()
 
+vqeopt = [['Optimizer: ', optimizer_name]]
+vqeopt += [['Variational Form: ', ansatz_name]]
+
+printing.print_opts_block(vqeopt)
+print('')
+
+vqerun = vqe.run(backend)
+
+vqe_circuit = vqe.get_optimal_circuit()
+vqe_circuit.draw(output='mpl', filename=filename + '.vqe_circuit.png')
+
+vqeend = time.time_ns()
 vqetime = (vqeend-vqestart)/10**9
 
-vqeopt = [['Optimizer: ', optimizer_name]]
+print('')
+print('*******************')
+print('* VQE Run Results *')
+print('*******************')
+print('')
+print('Optimal Parameters:')
 
-print_opts_block(vqeopt)
+printing.print_opts_block(vqerun.optimal_parameters)
+
+vqe_result = real(vqerun.eigenvalue + shift)
+
+exactstart = time.time_ns()
+
+exactrun = NumPyEigensolver(QubitOp).run()
+exact_result = real(exactrun.eigenvalues[-1]+shift)
+
+exactend = time.time_ns()
+exacttime = (exactend-exactstart)/10**9
+
+results = [['VQE Result: ', '{:.6f} Eh'.format(vqe_result)], 
+           ['VQE Run Elapsed Time: ', '{:.3f} s'.format(vqetime)],
+           ['Exact Result: ', '{:.6f} Eh'.format(exact_result)],
+           ['Exact Run Elapsed Time: ', '{:.3f} s'.format(exacttime)]]
+
+printing.print_opts_block(results)
