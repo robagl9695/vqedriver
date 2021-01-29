@@ -39,7 +39,7 @@ print('''
       '''
       )
 
-inputfile = 'small_molecule.inp' #sys.argv[1]
+inputfile = sys.argv[1]
 
 print('=============================================================================')
 print('Reading input file from file: ' + inputfile)
@@ -182,8 +182,6 @@ if qubitop_z2red:
                                                num_particles=[molecule.num_alpha,
                                                               molecule.num_beta])
 
-    
-
 qubitop_end = time.time_ns()
 qubitop_time = (qubitop_end-qubitop_start)/10**9
 
@@ -201,7 +199,7 @@ qubitop = [['Fermionic to Qubit Mapping: ', qubitop_dict[qubitop_map]],
 printing.print_opts_block(qubitop)
 QubitOp.to_file(filename + '.qubit_operator.txt')
 
-if QubitOp.num_qubits > 12:
+if QubitOp.num_qubits > 14:
     print('Insufficient Memory for test')
     sys.exit()
 
@@ -240,7 +238,7 @@ vqe = VQE(operator=QubitOp,
           var_form=ansatz,
           optimizer=optimizer)
 
-backend, backend_name = simulation._simulation(blocks)
+backend, backend_name, sim_exact = simulation._simulation(blocks)
 
 vqeend = time.time_ns()
 
@@ -248,7 +246,7 @@ exctype_dict = {'s': 'Singles',
                 'd': 'Doubles',
                 'sd': 'Singles-Doubles'}
 
-backend_dict = {'qasm': 'Qasm', 
+backend_dict = {'qasm': 'QASM', 
                 'statevector': 'Statevector'}
 
 vqeopt = [['Optimizer: ', optimizer_name]]
@@ -276,19 +274,33 @@ print('Optimal Parameters:')
 
 printing.print_opts_block(vqerun.optimal_parameters)
 
+print('')
+print('Eigenstate:')
+
+printing.print_opts_block(dict(vqerun.eigenstate))
+
+from qiskit.visualization import plot_histogram
+hist = plot_histogram(vqerun.eigenstate)
+hist.savefig(fname=filename + '.vqe_circuit_counts_hist.png')
+
 vqe_result = real(vqerun.eigenvalue + shift)
 
-exactstart = time.time_ns()
+if sim_exact:
+    exactstart = time.time_ns()
 
-exactrun = NumPyEigensolver(QubitOp).run()
-exact_result = real(exactrun.eigenvalues[-1]+shift)
+    exactrun = NumPyEigensolver(QubitOp).run()
+    exact_result = real(exactrun.eigenvalues[-1]+shift)
 
-exactend = time.time_ns()
-exacttime = (exactend-exactstart)/10**9
+    exactend = time.time_ns()
+    exacttime = (exactend-exactstart)/10**9
 
-results = [['VQE Result: ', '{:.6f} Eh'.format(vqe_result)], 
-           ['VQE Run Elapsed Time: ', '{:.3f} s'.format(vqetime)],
-           ['Exact Result: ', '{:.6f} Eh'.format(exact_result)],
-           ['Exact Run Elapsed Time: ', '{:.3f} s'.format(exacttime)]]
+results = [['VQE Result: ', '{:.6f} Eh'.format(vqe_result)],
+           ['Cost Function Evaluations: ', '{:d}'.format(vqerun.optimizer_evals)],
+           ['Optimizer time: ', '{:.3f} s'.format(vqerun.optimizer_time)],
+           ['VQE Run Elapsed Time: ', '{:.3f} s'.format(vqetime)]]
+
+if sim_exact:
+    results += [['Exact Result: ', '{:.6f} Eh'.format(exact_result)],
+                ['Exact Run Elapsed Time: ', '{:.3f} s'.format(exacttime)]]
 
 printing.print_opts_block(results)

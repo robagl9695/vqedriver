@@ -26,7 +26,7 @@ def _simulation(blocks):
         if len(sim_backend) != 0:
             sim_backend = sim_backend[0].split('=')[1].strip('\n')
             if sim_backend not in simulators_avail:
-                print('SimulationError: simulator not available, choose between "qasm", "statevector", and "unitary"')
+                print('SimulationError: simulator not available, choose between "qasm" and "statevector"')
                 sys.exit()
             elif sim_backend == 'qasm':
                 backend = QasmSimulator()
@@ -35,5 +35,19 @@ def _simulation(blocks):
 
         else:
             backend = QasmSimulator()
+            
+        sim_exact = [opt for opt in sim_opts if opt.startswith('exact')]
         
-    return backend, sim_backend
+        if len(sim_exact) != 0:
+            sim_exact = sim_exact[0].split('=')[1].strip('\n')
+            if sim_exact == 'true':
+                sim_exact = True
+            elif sim_exact == 'false':
+                sim_exact = False
+            else:
+                print('SimulationError: Invalid option for exact calculations')
+                sys.exit()
+        else:
+            sim_exact = True
+        
+    return backend, sim_backend, sim_exact

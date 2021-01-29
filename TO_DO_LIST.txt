@@ -2,8 +2,6 @@
 * INMEDIATE PRIORITIES *
 ************************
 
-- Add QASM Functionality
-
 - Add noisy model functionality
 
 - VQE number of expectation value measurements
@@ -44,15 +42,13 @@ ANSATZE:
 --------
 
 - Check why Z2 reduction only works for parity mapping in the InitialStates and the VarForm?
---- Does the mapping have to be consistent between all? Meanwhile, offer Z2 sym is NOT offered in any part
+--- Does the mapping have to be consistent between all? Meanwhile, Z2 sym is NOT offered in any part
 
 SIMULATION:
 -----------
 
-- Add %sim block: backend, test (true or false, calculates the exact energies using NumPyEigensolver), noise model, provider(?)
-- Backends def: https://medium.com/qiskit/qiskit-backends-what-they-are-and-how-to-work-with-them-fb66b3bd0463
+- Add %sim block: noise model
 - Add backend selection: 
--- Simulators: QASM, Statevector, Unitary, Pulse
 -- IBMQ: noisy simulators. Check https://qiskit.org/textbook/ch-applications/vqe-molecules.html#implementation
 
 DOCUMENTATION:
@@ -62,6 +58,10 @@ DOCUMENTATION:
 - Write down optimizers: local (local that require pip install scikit-quant)
 -- Global Optimizers: installing NLopt required.
 - Write ansatze: UCCSD, CHC
+- Write backend simulators: QASM and Statevector
+-- Description in https://qiskit.org/documentation/tutorials/simulators/1_aer_provider.html
+- Add how to configure IBMQ credentials: https://qiskit.org/documentation/install.html#install-access-ibm-q-devices-label or https://github.com/Qiskit/qiskit-terra/blob/master/README.md
+- Backends def: https://medium.com/qiskit/qiskit-backends-what-they-are-and-how-to-work-with-them-fb66b3bd0463
 
 MAIN DRIVER:
 ------------
