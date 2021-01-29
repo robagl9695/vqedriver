@@ -15,6 +15,7 @@ from vqeparser import qubitop_parser
 from vqeparser import optimizer_setup
 from vqeparser import ansatz_setup
 from vqeparser import printing
+from vqeparser import simulation
 from numpy import real
 import sys
 import time
@@ -147,7 +148,7 @@ printing.print_opts_block(scfprocsettings)
 
 if h1.size > 1600:
     print('Insufficient Memory for test')
-    sys.exit(1)
+    sys.exit()
 
 #VQE Calculation
 print('')
@@ -188,8 +189,7 @@ qubitop_time = (qubitop_end-qubitop_start)/10**9
 
 qubitop_dict = {'jordan_wigner': 'Jordan-Wigner', 
                'parity': 'Parity', 
-               'bravyi_kitaev': 'Bravyi-Kitaev', 
-               'bksf': 'Bravyi-Kitaev Superfast'}
+               'bravyi_kitaev': 'Bravyi-Kitaev'}
 
 qubitop = [['Fermionic to Qubit Mapping: ', qubitop_dict[qubitop_map]], 
            ['Pauli Chop Threshold: ', '{:.3e}'.format(10**(-qubitop_threshold))],
@@ -203,7 +203,7 @@ QubitOp.to_file(filename + '.qubit_operator.txt')
 
 if QubitOp.num_qubits > 12:
     print('Insufficient Memory for test')
-    sys.exit(1)
+    sys.exit()
 
 print('')
 print('Hamiltonian in Pauli Representation: ')
@@ -227,7 +227,7 @@ num_qubits = QubitOp.num_qubits
 
 vqestart = time.time_ns()
 
-ansatz, ansatz_name = ansatz_setup._ansatz(blocks,
+ansatz, ansatz_name, ansatz_exctype = ansatz_setup._ansatz(blocks,
                                            num_spinorb,
                                            num_part,
                                            qubitop_map,
@@ -240,14 +240,21 @@ vqe = VQE(operator=QubitOp,
           var_form=ansatz,
           optimizer=optimizer)
 
-from qiskit import BasicAer
-
-backend = BasicAer.get_backend('statevector_simulator')
+backend, backend_name = simulation._simulation(blocks)
 
 vqeend = time.time_ns()
 
+exctype_dict = {'s': 'Singles', 
+                'd': 'Doubles',
+                'sd': 'Singles-Doubles'}
+
+backend_dict = {'qasm': 'Qasm', 
+                'statevector': 'Statevector'}
+
 vqeopt = [['Optimizer: ', optimizer_name]]
-vqeopt += [['Variational Form: ', ansatz_name]]
+vqeopt += [['Variational Form: ', ansatz_name],
+           ['Excitation Type: ', exctype_dict[ansatz_exctype]],
+           ['Simulator: ', backend_dict[backend_name]]]
 
 printing.print_opts_block(vqeopt)
 print('')

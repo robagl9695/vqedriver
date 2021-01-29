@@ -31,7 +31,7 @@ def _optim(blocks):
             optimizer_method = optimizer_method[0].split('=')[1].strip('\n')
             if optimizer_method not in optimizer_avail:
                 print('OptimizerError: Invalid optimizer selected')
-                sys.exit(1)
+                sys.exit()
             else:
                 if optimizer_method == 'cg':
                     maxiter = [opt for opt in optimizer_opts if opt.startswith('maxiter')]

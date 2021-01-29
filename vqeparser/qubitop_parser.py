@@ -27,7 +27,7 @@ def _qubitop(blocks):
             qubitop_map = qubitop_map[0].split('=')[1].strip('\n')
             if qubitop_map not in map_avail:
                 print('MappingError: Invalid fermionic operator mapping selected')
-                sys.exit(1)
+                sys.exit()
             else:
                 qubitop_map = qubitop_map
             
@@ -48,7 +48,7 @@ def _qubitop(blocks):
                 qubitop_z2red = False
             else:
                 print('MappingError: Invalid option for Z2 symmetries')
-                sys.exit(1)
+                sys.exit()
         else:
             qubitop_z2red = False
         

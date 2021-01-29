@@ -11,7 +11,6 @@
 BASIS SET:
 ----------
 
-- Add checkpoint for availability of basis set
 - Add read of ECPs
 
 SCF CALCULATION:
@@ -45,8 +44,7 @@ ANSATZE:
 --------
 
 - Check why Z2 reduction only works for parity mapping in the InitialStates and the VarForm?
---- Does the mapping have to be consistent between all? Meanwhile, offer Z2 sym only for parity
-- Implement other ansatze: CHC, UCC from aqua.var_forms
+--- Does the mapping have to be consistent between all? Meanwhile, offer Z2 sym is NOT offered in any part
 
 SIMULATION:
 -----------
@@ -54,7 +52,7 @@ SIMULATION:
 - Add %sim block: backend, test (true or false, calculates the exact energies using NumPyEigensolver), noise model, provider(?)
 - Backends def: https://medium.com/qiskit/qiskit-backends-what-they-are-and-how-to-work-with-them-fb66b3bd0463
 - Add backend selection: 
--- Simulators: QASM, Statevector, Unitary
+-- Simulators: QASM, Statevector, Unitary, Pulse
 -- IBMQ: noisy simulators. Check https://qiskit.org/textbook/ch-applications/vqe-molecules.html#implementation
 
 DOCUMENTATION:
@@ -63,6 +61,7 @@ DOCUMENTATION:
 - Complete list of available basis sets
 - Write down optimizers: local (local that require pip install scikit-quant)
 -- Global Optimizers: installing NLopt required.
+- Write ansatze: UCCSD, CHC
 
 MAIN DRIVER:
 ------------

@@ -48,7 +48,7 @@ def _scf(blocks, spin):
             if scfmethod == 'rhf':
                 if spin != 0:
                     print('SCFError: Open-shell molecule, select between UHF and ROHF')
-                    sys.exit(1)
+                    sys.exit()
                 else:
                     scfmethod = HFMethodType.RHF
             elif scfmethod == 'uhf':
@@ -57,7 +57,7 @@ def _scf(blocks, spin):
                 scfmethod = HFMethodType.ROHF
             else:
                 print('SCFError: Invalid HF method')
-                sys.exit(1)
+                sys.exit()
         else:
             if spin == 0:
                 scfmethod = HFMethodType.RHF

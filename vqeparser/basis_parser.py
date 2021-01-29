@@ -172,7 +172,7 @@ def read_basisset(basisset, coords):
     if len(unavailable) != 0:
         print('BasisSetError: ' + basisset + ' unavailable for the following elements:')
         print(unavailable)
-        sys.exit(1)
+        sys.exit()
     
     basis = {}
     
@@ -205,10 +205,10 @@ def _basis(blocks, coords):
 
     if len(basis_block) == 0:
         print('BasisSetError: Basis set missing')
-        sys.exit(1)
+        sys.exit()
     elif len(basis_block) > 1:
         print('BasisSetError: More than one basis set specified')
-        sys.exit(1)
+        sys.exit()
     
     basis_block = basis_block[0]
     
@@ -216,6 +216,10 @@ def _basis(blocks, coords):
     
     basis_all = [opt for opt in basis_opts if opt.startswith('all')][0]
     basisset = basis_all.split('=')[1]
+    
+    if basisset not in basis_dict:
+        print('BasisSetError: Basis set not available')
+        sys.exit()
     
     basis, basisdim, basistotal = read_basisset(basisset, coords)
     

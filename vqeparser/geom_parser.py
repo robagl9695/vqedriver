@@ -49,10 +49,10 @@ def _geom(blocks):
     
     if len(geom_block) == 0:
         print('GeometryInputError: Geometry specification missing')
-        sys.exit(1)
+        sys.exit()
     elif len(geom_block) > 1:
         print('GeometryInputError: More than geometry specified')
-        sys.exit(1)
+        sys.exit()
     
     geom_block = geom_block[0]
     
@@ -82,7 +82,7 @@ def _geom(blocks):
             units = UnitsType.BOHR
         else:
             print('GeometryInputError: Invalid Units on Input, please select between "angstrom" and "bohr" (Default = angstrom)')
-            sys.exit(1)
+            sys.exit()
     else:
         units = UnitsType.ANGSTROM
 
