@@ -2,9 +2,9 @@
 * INMEDIATE PRIORITIES *
 ************************
 
-- Add noisy model functionality
+- Sanity check: check paper results
 
-- VQE number of expectation value measurements
+- Add noisy model functionality (WE NEED THE NOISE MODELS)
 
 BASIS SET:
 ----------
@@ -48,7 +48,7 @@ SIMULATION:
 -----------
 
 - Add %sim block: noise model
-- Add backend selection: 
+- Add method selection for backends 
 -- IBMQ: noisy simulators. Check https://qiskit.org/textbook/ch-applications/vqe-molecules.html#implementation
 
 DOCUMENTATION:
@@ -57,11 +57,6 @@ DOCUMENTATION:
 - Complete list of available basis sets
 - Write down optimizers: local (local that require pip install scikit-quant)
 -- Global Optimizers: installing NLopt required.
-- Write ansatze: UCCSD, CHC
-- Write backend simulators: QASM and Statevector
--- Description in https://qiskit.org/documentation/tutorials/simulators/1_aer_provider.html
-- Add how to configure IBMQ credentials: https://qiskit.org/documentation/install.html#install-access-ibm-q-devices-label or https://github.com/Qiskit/qiskit-terra/blob/master/README.md
-- Backends def: https://medium.com/qiskit/qiskit-backends-what-they-are-and-how-to-work-with-them-fb66b3bd0463
 
 MAIN DRIVER:
 ------------

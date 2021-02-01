@@ -6,7 +6,6 @@ Created on Sun Jan 17 17:56:56 2021
 @author: rgonzalez
 """
 
-from qiskit.aqua.algorithms import NumPyEigensolver
 from vqeparser import main_parser
 from vqeparser import geom_parser
 from vqeparser import basis_parser
@@ -19,6 +18,9 @@ from vqeparser import simulation
 from numpy import real
 import sys
 import time
+from psutil import cpu_count
+
+numprocs = cpu_count()
 
 print('''
          ============================================================
@@ -39,7 +41,7 @@ print('''
       '''
       )
 
-inputfile = sys.argv[1]
+inputfile = 'EXAMPLE.inp'#sys.argv[1]
 
 print('=============================================================================')
 print('Reading input file from file: ' + inputfile)
@@ -236,31 +238,45 @@ from qiskit.aqua.algorithms import VQE
 
 vqe = VQE(operator=QubitOp,
           var_form=ansatz,
-          optimizer=optimizer)
+          optimizer=optimizer,
+          max_evals_grouped=numprocs)
 
-backend, backend_name, sim_exact = simulation._simulation(blocks)
+backend, backend_name, shots, sim_exact = simulation._simulation(blocks)
 
-vqeend = time.time_ns()
+from qiskit.aqua import QuantumInstance
+import qiskit.providers.aer.noise as noise
+
+noise_model = noise.NoiseModel()
+basis_gates = backend._DEFAULT_CONFIGURATION['basis_gates']
+
+qi = QuantumInstance(backend=backend,
+                     shots=shots,
+                     basis_gates=basis_gates,
+                     noise_model=noise_model)
 
 exctype_dict = {'s': 'Singles', 
                 'd': 'Doubles',
                 'sd': 'Singles-Doubles'}
 
-backend_dict = {'qasm': 'QASM', 
+backend_dict = {'qasm': 'Qasm', 
                 'statevector': 'Statevector'}
 
 vqeopt = [['Optimizer: ', optimizer_name]]
 vqeopt += [['Variational Form: ', ansatz_name],
            ['Excitation Type: ', exctype_dict[ansatz_exctype]],
-           ['Simulator: ', backend_dict[backend_name]]]
+           ['Simulator: ', backend_dict[backend_name]],
+           ['Shots: ', shots]]
 
 printing.print_opts_block(vqeopt)
 print('')
 
-vqerun = vqe.run(backend)
+vqerun = vqe.run(qi)
 
 vqe_circuit = vqe.get_optimal_circuit()
 vqe_circuit.draw(output='mpl', filename=filename + '.vqe_circuit.png')
+
+vqe_circuit_decompose = vqe_circuit.decompose()
+vqe_circuit_decompose.draw(output='mpl', filename=filename + '.vqe_circuit.decompose.png')
 
 vqeend = time.time_ns()
 vqetime = (vqeend-vqestart)/10**9
@@ -286,6 +302,9 @@ hist.savefig(fname=filename + '.vqe_circuit_counts_hist.png')
 vqe_result = real(vqerun.eigenvalue + shift)
 
 if sim_exact:
+
+    from qiskit.aqua.algorithms import NumPyEigensolver
+
     exactstart = time.time_ns()
 
     exactrun = NumPyEigensolver(QubitOp).run()

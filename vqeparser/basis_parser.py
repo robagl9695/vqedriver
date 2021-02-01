@@ -5,6 +5,7 @@ Created on Sat Jan 16 22:46:10 2021
 
 @author: rgonzalez
 """
+
 from pyscf.gto.basis import parse
 import os
 import sys

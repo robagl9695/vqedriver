@@ -50,4 +50,15 @@ def _simulation(blocks):
         else:
             sim_exact = True
         
-    return backend, sim_backend, sim_exact
+        sim_shots = [opt for opt in sim_opts if opt.startswith('shots')]    
+        
+        if len(sim_shots) != 0:
+            sim_shots = sim_shots[0].split('=')[1].strip('\n')
+            try:
+                sim_shots = int(sim_shots)
+            except:
+                print('SimulationError: the number of shots have to be an integer number')
+        else:
+            sim_shots = 1024
+        
+    return backend, sim_backend, sim_shots, sim_exact

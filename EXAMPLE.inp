@@ -7,10 +7,10 @@ small molecule
 
 %scf conv=8 method=uhf maxcore=1000
 
-%qubitop threshold=6 map=jw
+%qubitop threshold=6 map=parity
 
 %optimizer method=cg maxiter=1000 print=true conv=6
 
-%ansatz method=chc exctype=sd
+%ansatz method=uccsd exctype=sd
 
-%sim backend=qasm exact=true
+%sim backend=qasm exact=true shots=8192

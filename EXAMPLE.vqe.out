@@ -61,7 +61,7 @@ Procedure Settings:
       Maximum memory:        1000 MB
   One-body Integrals:             16
   Two-body Integrals:            256
-    SCF Elapsed Time:        0.073 s
+    SCF Elapsed Time:        0.484 s
 
        *********************        
        *  VQE CALCULATION  *        
@@ -70,31 +70,31 @@ Procedure Settings:
 ---------------------
 Qubit Operator Setup 
 ---------------------
-                                                   
-        Fermionic to Qubit Mapping:   Jordan-Wigner
-              Pauli Chop Threshold:       1.000e-06
-                  Number of Qubits:               4
-           Z2 Symmetries Reduction:           False
-  Size (Number of Pauli Operators):              15
-        Qubit Mapping Elapsed Time:         0.055 s
+                                               
+        Fermionic to Qubit Mapping:      Parity
+              Pauli Chop Threshold:   1.000e-06
+                  Number of Qubits:           4
+           Z2 Symmetries Reduction:       False
+  Size (Number of Pauli Operators):          15
+        Qubit Mapping Elapsed Time:     0.102 s
 
 Hamiltonian in Pauli Representation: 
 
 IIII	(-0.8121706154421989+0j)
 IIIZ	(0.17141282685668452+0j)
-IIZI	(-0.22343153259602455+0j)
-IZII	(0.17141282685668435+0j)
-ZIII	(-0.2234315325960245+0j)
-IIZZ	(0.12062523472452732+0j)
-IZIZ	(0.1686889820613479+0j)
-XXYY	(0.04530261534142704+0j)
-YYYY	(0.04530261534142704+0j)
-XXXX	(0.04530261534142704+0j)
-YYXX	(0.04530261534142704+0j)
-ZIIZ	(0.16592785006595434+0j)
-IZZI	(0.1659278500659544+0j)
-ZIZI	(0.17441287527856786+0j)
-ZZII	(0.12062523472452732+0j)
+IIZZ	(-0.22343153259602455+0j)
+IZZI	(0.17141282685668435+0j)
+ZZII	(-0.2234315325960245+0j)
+IIZI	(0.12062523472452732+0j)
+IZZZ	(0.1686889820613479+0j)
+IXZX	(-0.04530261534142704+0j)
+ZXIX	(0.04530261534142704+0j)
+IXIX	(0.04530261534142704+0j)
+ZXZX	(-0.04530261534142704+0j)
+ZZIZ	(0.16592785006595434+0j)
+IZIZ	(0.1659278500659544+0j)
+ZZZZ	(0.17441287527856786+0j)
+ZIZI	(0.12062523472452732+0j)
 
 -----------------
 VQE Run Settings 
@@ -106,10 +106,10 @@ VQE Run Settings
          Simulator:                 QASM
 
 Warning: Desired error not necessarily achieved due to precision loss.
-         Current function value: -1.562823
-         Iterations: 2
-         Function evaluations: 181
-         Gradient evaluations: 34
+         Current function value: -1.346499
+         Iterations: 1
+         Function evaluations: 142
+         Gradient evaluations: 33
 
 *******************
 * VQE Run Results *
@@ -117,20 +117,20 @@ Warning: Desired error not necessarily achieved due to precision loss.
 
 Optimal Parameters:
                   
-  θ[0]:   2.723190
-  θ[1]:   2.574582
-  θ[2]:   2.201913
+  θ[0]:  -0.596638
+  θ[1]:  -2.188907
+  θ[2]:  -0.016122
 
 Eigenstate:
              
-  0101:   687
-  0110:    76
-  1001:    22
-  1010:   239
+  0000:    20
+  0011:   194
+  1100:    68
+  1111:   742
                                            
-                 VQE Result:   -0.847719 Eh
-  Cost Function Evaluations:            181
-             Optimizer time:        9.095 s
-       VQE Run Elapsed Time:        9.780 s
+                 VQE Result:   -0.631395 Eh
+  Cost Function Evaluations:            142
+             Optimizer time:        5.269 s
+       VQE Run Elapsed Time:       10.949 s
                Exact Result:   -1.137284 Eh
-     Exact Run Elapsed Time:        0.009 s
+     Exact Run Elapsed Time:        0.165 s
