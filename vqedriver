@@ -41,7 +41,7 @@ print('''
       '''
       )
 
-inputfile = 'EXAMPLE.inp'#sys.argv[1]
+inputfile = sys.argv[1]
 
 print('=============================================================================')
 print('Reading input file from file: ' + inputfile)
@@ -54,7 +54,7 @@ blocks, filename = main_parser._parser(inputfile)
 #obtain the molecule characteristics
 
 coords, charge, spin, units = geom_parser._geom(blocks)
-basis, basisset, basisdim, basistotal = basis_parser._basis(blocks, coords)
+basis, basisset, basisdim, basistotal, basis_spinorb = basis_parser._basis(blocks, coords)
 scfmethod, scfconv, scfiter, scfcore = scf_parser._scf(blocks, spin)
 
 #SCF calculation
@@ -86,7 +86,8 @@ for key in basis:
     print(key + ': ' + basisset)
     
 basis_opts = [['Unique basis functions: ', basisdim],
-              ['TOTAL BASIS FUNCTIONS: ', basistotal]]
+              ['Total basis functions: ', basistotal],
+              ['Basis spin-orbitals: ', 2*basis_spinorb]]
 
 printing.print_opts_block(basis_opts)
 
@@ -108,6 +109,11 @@ driver = PySCFDriver(atom=coords,
 
 molecule = driver.run()
 
+num_part = [molecule.num_alpha, molecule.num_beta]
+num_spinorb = 2*molecule.num_orbitals
+num_elec = molecule.num_alpha + molecule.num_beta
+shift = molecule.nuclear_repulsion_energy
+
 h1 = molecule.one_body_integrals
 h2 = molecule.two_body_integrals
 
@@ -123,15 +129,13 @@ print('------------------------')
 print('')
 print('Molecule Settings:')
 
-num_elec = molecule.num_alpha + molecule.num_beta
-shift = molecule.nuclear_repulsion_energy
-
 scfmolsettings = [['Hartree-Fock type: ', scfmethod.name], 
                   ['Total Charge: ', charge],
                   ['Multiplicity: ', spin+1],
                   ['Number of Electrons: ', num_elec], 
                   ['Alpha Electrons: ', molecule.num_alpha],
                   ['Beta Electrons: ', molecule.num_beta],
+                  ['Spin Orbitals: ', num_spinorb],
                   ['Nuclear Repulsion: ', '{:.6f} Eh'.format(molecule.nuclear_repulsion_energy)]]
 
 printing.print_opts_block(scfmolsettings)
@@ -148,7 +152,7 @@ scfprocsettings = [['Maximum iterations: ', scfiter],
 
 printing.print_opts_block(scfprocsettings)
 
-if h1.size > 1600:
+if h1.size >= 1600:
     print('Insufficient Memory for test')
     sys.exit()
 
@@ -165,7 +169,6 @@ print('---------------------')
 #parse vqe settings
 
 qubitop_map, qubitop_threshold, qubitop_z2red = qubitop_parser._qubitop(blocks)
-optimizer, optimizer_name = optimizer_setup._optim(blocks)
 
 #building the fermionic and qubit operators
 
@@ -221,11 +224,11 @@ print('-----------------')
 
 #set up the ansatz
 
-num_part = [molecule.num_alpha, molecule.num_beta]
-num_spinorb = 2*molecule.num_orbitals
 num_qubits = QubitOp.num_qubits
 
 vqestart = time.time_ns()
+
+optimizer, optimizer_name, optimizer_prints = optimizer_setup._optim(blocks)
 
 ansatz, ansatz_name, ansatz_exctype = ansatz_setup._ansatz(blocks,
                                            num_spinorb,
@@ -241,7 +244,7 @@ vqe = VQE(operator=QubitOp,
           optimizer=optimizer,
           max_evals_grouped=numprocs)
 
-backend, backend_name, shots, sim_exact = simulation._simulation(blocks)
+backend, backend_name, method, shots, sim_exact = simulation._simulation(blocks)
 
 from qiskit.aqua import QuantumInstance
 import qiskit.providers.aer.noise as noise
@@ -258,14 +261,26 @@ exctype_dict = {'s': 'Singles',
                 'd': 'Doubles',
                 'sd': 'Singles-Doubles'}
 
-backend_dict = {'qasm': 'Qasm', 
+backend_dict = {'qasm': 'QASM', 
                 'statevector': 'Statevector'}
 
+qasm_dict = {'statevector': 'Statevector',
+             'density_matrix': 'Density Matrix', 
+             'matrix_product_state': 'Matrix Product State',
+             'automatic': 'Automatic'}
+
 vqeopt = [['Optimizer: ', optimizer_name]]
+vqeopt += optimizer_prints
+vqeopt += [['', '']]
+
 vqeopt += [['Variational Form: ', ansatz_name],
            ['Excitation Type: ', exctype_dict[ansatz_exctype]],
+           ['', ''],
            ['Simulator: ', backend_dict[backend_name]],
            ['Shots: ', shots]]
+
+if backend_name == 'qasm':
+    vqeopt += [['Simulation Method: ', qasm_dict[method]]]
 
 printing.print_opts_block(vqeopt)
 print('')
@@ -290,36 +305,58 @@ print('Optimal Parameters:')
 
 printing.print_opts_block(vqerun.optimal_parameters)
 
-print('')
-print('Eigenstate:')
+if backend_name == 'qasm':
+    print('')
+    print('Eigenstate:')
 
-printing.print_opts_block(dict(vqerun.eigenstate))
+    printing.print_opts_block(dict(vqerun.eigenstate))
 
-from qiskit.visualization import plot_histogram
-hist = plot_histogram(vqerun.eigenstate)
-hist.savefig(fname=filename + '.vqe_circuit_counts_hist.png')
+    from qiskit.visualization import plot_histogram
+    hist = plot_histogram(vqerun.eigenstate)
+    hist.savefig(fname=filename + '.vqe_circuit_counts_hist.png')
 
 vqe_result = real(vqerun.eigenvalue + shift)
 
 if sim_exact:
 
     from qiskit.aqua.algorithms import NumPyEigensolver
+    from qiskit.providers.aer import StatevectorSimulator
+    from qiskit.quantum_info import state_fidelity
+    from qiskit import execute
 
     exactstart = time.time_ns()
 
     exactrun = NumPyEigensolver(QubitOp).run()
     exact_result = real(exactrun.eigenvalues[-1]+shift)
+    
+    exact_sv = exactrun.eigenstates[-1].to_matrix()
+    
+    backend_sv = StatevectorSimulator(max_memory_mb = 2048,
+                                       statevector_parallel_threshold=8)
+    
+    vqe_sv_job = execute(vqe_circuit, backend_sv)
+    vqe_sv_job_result = vqe_sv_job.result()
+    vqe_sv = vqe_sv_job_result.get_statevector(vqe_circuit)
+    
+    fidelity = state_fidelity(exact_sv, vqe_sv)
 
     exactend = time.time_ns()
     exacttime = (exactend-exactstart)/10**9
 
-results = [['VQE Result: ', '{:.6f} Eh'.format(vqe_result)],
-           ['Cost Function Evaluations: ', '{:d}'.format(vqerun.optimizer_evals)],
+results = [['Number of Parameters: ', '{:d}'.format(len(vqerun.optimal_parameters))],
+           ['Cost Function Evaluations: ', '{:d}'.format(vqerun.cost_function_evals)],
            ['Optimizer time: ', '{:.3f} s'.format(vqerun.optimizer_time)],
+           ['', ''],
+           ['VQE Result: ', '{:.6f} Eh'.format(vqe_result)],
+           ['VQE Circuit Depth: ', vqe_circuit_decompose.depth()],
            ['VQE Run Elapsed Time: ', '{:.3f} s'.format(vqetime)]]
 
 if sim_exact:
-    results += [['Exact Result: ', '{:.6f} Eh'.format(exact_result)],
+    results += [['', ''],
+                ['Exact Result: ', '{:.6f} Eh'.format(exact_result)],
+                ['Fidelity: ', '{:.4f}'.format(fidelity)],
                 ['Exact Run Elapsed Time: ', '{:.3f} s'.format(exacttime)]]
 
 printing.print_opts_block(results)
+
+

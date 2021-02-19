@@ -3,14 +3,14 @@ small molecule
 
 %geometry xyzfile=H2.xyz charge=0 spin=0 units=angstrom
 
-%basis all=STO-3G
+%basis all=STO-6G
 
 %scf conv=8 method=uhf maxcore=1000
 
 %qubitop threshold=6 map=parity
 
-%optimizer method=cg maxiter=1000 print=true conv=6
+%optimizer method=spsa maxiter=1000 maxfun=1000 
 
 %ansatz method=uccsd exctype=sd
 
-%sim backend=qasm exact=true shots=8192
+%sim backend=qasm exact=true shots=8192 method=statevector

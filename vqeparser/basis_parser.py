@@ -11,9 +11,9 @@ import os
 import sys
 from collections import Counter
 
-prefix = os.getcwd()
+prefix = os.path.dirname(os.path.abspath(__file__))
 
-basen_path = prefix + '/basen/'
+basen_path = prefix + '/../basen/'
 
 basis_dict = {'6-21G': '6-21g.1.nw',
               '6-311+G': '6-311+g.0.nw', 
@@ -183,22 +183,27 @@ def read_basisset(basisset, coords):
         
     basisdim = 0
     basistotal = 0
+    basis_orbs = 0
     
     for atom in atoms:
         index = atoms_avail.index(atom)
         atom_block = basisblocks[index]
         atom_block = atom_block.split('\n')
         
+        atom_orbs = []
+        
         for i in reversed(range(0, len(atom_block), 1)):
             if atom_block[i].startswith(atom):
-                atom_block.pop(i)
+                atom_popped = atom_block.pop(i)
+                atom_orbs.append(atom_popped)
                 
         numatoms = atoms[atom]
         
         basisdim += len(atom_block)
         basistotal += len(atom_block)*numatoms
+        basis_orbs += len(atom_orbs)*numatoms
     
-    return basis, basisdim, basistotal
+    return basis, basisdim, basistotal, basis_orbs
     
     
 def _basis(blocks, coords):
@@ -222,6 +227,6 @@ def _basis(blocks, coords):
         print('BasisSetError: Basis set not available')
         sys.exit()
     
-    basis, basisdim, basistotal = read_basisset(basisset, coords)
+    basis, basisdim, basistotal, basis_orbs = read_basisset(basisset, coords)
     
-    return basis, basisset, basisdim, basistotal
+    return basis, basisset, basisdim, basistotal, basis_orbs

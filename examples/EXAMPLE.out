@@ -1,0 +1,141 @@
+
+         ============================================================
+         =                                                          =
+         =                        VQEDriver                         =
+         =                         v0.0.0                           =
+         =                                                          =
+         ============================================================
+      
+         --- Python3 driver for the VQE algorithm on IBM's Qiskit ---
+               
+         Developed by:
+              Quantum Information Group
+              School of Chemistry
+              Universidad de Costa Rica
+              San Jose, Costa Rica
+      
+      
+=============================================================================
+Reading input file from file: EXAMPLE.inp
+=============================================================================
+
+
+       *********************        
+       *  SCF CALCULATION  *        
+       *********************        
+
+---------------------
+Cartesian Coordinates
+---------------------
+                        
+  H  0.000  0.000  0.000
+  H  0.000  0.000  0.740
+
+---------------------
+Basis Set Information
+---------------------
+
+H: STO-6G
+                              
+  Unique basis functions:    6
+   Total basis functions:   12
+     Basis spin-orbitals:    4
+
+------------------------
+SCF Calculation Settings
+------------------------
+
+Molecule Settings:
+                                    
+    Hartree-Fock type:           UHF
+         Total Charge:             0
+         Multiplicity:             1
+  Number of Electrons:             2
+      Alpha Electrons:             1
+       Beta Electrons:             1
+        Spin Orbitals:             4
+    Nuclear Repulsion:   0.715104 Eh
+
+Procedure Settings:
+                                    
+  Maximum iterations:             50
+         Convergence:   1.000e-08 Eh
+      Maximum memory:        1000 MB
+  One-body Integrals:             16
+  Two-body Integrals:            256
+    SCF Elapsed Time:        0.114 s
+
+       *********************        
+       *  VQE CALCULATION  *        
+       *********************        
+
+---------------------
+Qubit Operator Setup 
+---------------------
+                                               
+        Fermionic to Qubit Mapping:      Parity
+              Pauli Chop Threshold:   1.000e-06
+                  Number of Qubits:           4
+           Z2 Symmetries Reduction:       False
+  Size (Number of Pauli Operators):          15
+        Qubit Mapping Elapsed Time:     0.177 s
+
+Hamiltonian in Pauli Representation: 
+
+IIII	(-0.8197990352771328+0j)
+IIIZ	(0.1733015473134515+0j)
+IIZZ	(-0.2219611768140931+0j)
+IZZI	(0.17330154731345154+0j)
+ZZII	(-0.22196117681409316+0j)
+IIZI	(0.12072156028334473+0j)
+IZZZ	(0.16867480230168252+0j)
+IXZX	(-0.04537446554936894+0j)
+ZXIX	(0.04537446554936894+0j)
+IXIX	(0.04537446554936894+0j)
+ZXZX	(-0.04537446554936894+0j)
+ZZIZ	(0.16609602583271368+0j)
+IZIZ	(0.16609602583271366+0j)
+ZZZZ	(0.17480831974461675+0j)
+ZIZI	(0.12072156028334473+0j)
+
+-----------------
+VQE Run Settings 
+-----------------
+                                       
+           Optimizer:              SPSA
+  Maximum Iterations:              1000
+                                       
+    Variational Form:             UCCSD
+     Excitation Type:   Singles-Doubles
+                                       
+           Simulator:              QASM
+               Shots:              8192
+   Simulation Method:       Statevector
+
+
+*******************
+* VQE Run Results *
+*******************
+
+Optimal Parameters:
+                  
+  θ[0]:  -1.565803
+  θ[1]:  -1.567677
+  θ[2]:   1.450034
+
+Eigenstate:
+              
+  0011:   8071
+  0110:    121
+                                           
+       Number of Parameters:              3
+  Cost Function Evaluations:           2051
+             Optimizer time:      110.726 s
+                                           
+                 VQE Result:   -1.148789 Eh
+          VQE Circuit Depth:             66
+       VQE Run Elapsed Time:      113.727 s
+                                           
+               Exact Result:   -1.145940 Eh
+                   Fidelity:         0.9999
+     Exact Run Elapsed Time:        0.019 s

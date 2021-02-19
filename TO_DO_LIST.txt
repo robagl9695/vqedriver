@@ -34,7 +34,6 @@ OPTIMIZER:
 ----------
 
 - Add rest of optimizers available in qiskit.aqua.components.optimizers: 
--- Local: ADAM, AQGD, COBYLA, L-BFGS-B, GSLS, Nelder-Mead, NFT, P-BFGS, Powell, SLSQP, SPSA, TNC
 -- Local scikit: BOBYQA, IMFIL, SNOBFIT
 -- Global: install NLopt first!!
 
@@ -48,7 +47,6 @@ SIMULATION:
 -----------
 
 - Add %sim block: noise model
-- Add method selection for backends 
 -- IBMQ: noisy simulators. Check https://qiskit.org/textbook/ch-applications/vqe-molecules.html#implementation
 
 DOCUMENTATION:
@@ -57,6 +55,7 @@ DOCUMENTATION:
 - Complete list of available basis sets
 - Write down optimizers: local (local that require pip install scikit-quant)
 -- Global Optimizers: installing NLopt required.
+-- Local: ADAM, AQGD, COBYLA, L-BFGS-B, GSLS, Nelder-Mead, NFT, P-BFGS, Powell, SLSQP, SPSA, TNC
 
 MAIN DRIVER:
 ------------
