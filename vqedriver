@@ -15,6 +15,7 @@ from vqeparser import optimizer_setup
 from vqeparser import ansatz_setup
 from vqeparser import printing
 from vqeparser import simulation
+from vqeparser import noise
 from numpy import real
 import sys
 import time
@@ -247,9 +248,9 @@ vqe = VQE(operator=QubitOp,
 backend, backend_name, method, shots, sim_exact = simulation._simulation(blocks)
 
 from qiskit.aqua import QuantumInstance
-import qiskit.providers.aer.noise as noise
 
-noise_model = noise.NoiseModel()
+noise_model, noise_prints = noise._noise(blocks, backend)
+
 basis_gates = backend._DEFAULT_CONFIGURATION['basis_gates']
 
 qi = QuantumInstance(backend=backend,
@@ -281,6 +282,11 @@ vqeopt += [['Variational Form: ', ansatz_name],
 
 if backend_name == 'qasm':
     vqeopt += [['Simulation Method: ', qasm_dict[method]]]
+elif backend_name == 'statevector':
+    vqeopt += [['Simulation Method: ', 'Statevector']]
+
+vqeopt += [['', '']]
+vqeopt += noise_prints
 
 printing.print_opts_block(vqeopt)
 print('')

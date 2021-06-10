@@ -13,4 +13,4 @@ small molecule
 
 %ansatz method=uccsd exctype=sd
 
-%sim backend=qasm exact=true shots=8192 method=statevector
+%sim backend=statevector exact=true shots=8192 method=statevector
